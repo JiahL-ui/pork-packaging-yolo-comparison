@@ -1,5 +1,5 @@
 """
-data_preprocess.py
+data_preprocess.py ->负责读取 YOLO 格式数据集，检查文件完整性，把图片和标注一一配对，是你项目的数据入口模块
 Data loading, validation and pre‑processing for MMA3001 pork‑rasher packaging defect dataset.
 """
 from pathlib import Path

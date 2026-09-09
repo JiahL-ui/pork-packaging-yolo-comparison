@@ -1,0 +1,7 @@
+#YOLO训练必须的数据集配置文件，后续你可以修改类别数量、名称，拆分 train/val 子文件夹
+# dataset.yaml for pork packaging defect detection
+path: ../data
+train: images
+val: images
+names:
+  0: packaging_defect 
