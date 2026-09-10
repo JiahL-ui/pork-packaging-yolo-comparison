@@ -99,6 +99,7 @@ ipython_config.py
 # pixi
 # pixi.lock
 .pixi
+
 # PEP 582
 __pypackages__/
 
@@ -180,14 +181,26 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-# -------------------------- 项目专属（MMA3001 YOLO猪肉检测） --------------------------
-# YOLO模型权重
+# Office temp files
+~$*.docx
+~$*.doc
+
+# OS system files
+.DS_Store
+Thumbs.db
+
+# -------------------------- 【MMA3001 猪肉包装缺陷检测 项目专属】 --------------------------
+# 仅过滤runs下的模型权重pt/pth，保留csv训练日志、png曲线图、混淆矩阵
+runs/**/weights/*.pt
+runs/**/weights/*.pth
+
+# 根目录下权重文件
 *.pt
 *.pth
-# 数据集图片（不提交图片到git，只保留代码和说明文档）
-*.jpg
-*.jpeg
-*.png
-*.bmp
-# YOLO训练输出目录（ultralytics自动生成runs文件夹，体积很大）
-runs/
+
+# 过滤数据集图片文件，txt标签文件不受此规则影响，会正常提交
+data/**/*.jpg
+data/**/*.jpeg
+data/**/*.png
+data/**/*.bmp
+data/**/*.webp
