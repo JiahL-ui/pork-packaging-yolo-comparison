@@ -204,3 +204,6 @@ data/**/*.jpeg
 data/**/*.png
 data/**/*.bmp
 data/**/*.webp
+
+# yolo cache files
+*.cache
