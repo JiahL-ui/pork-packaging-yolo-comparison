@@ -41,23 +41,23 @@ A detailed audit of the dataset revealed severe class imbalance and missing vali
 
 ```
 pork-packaging-yolo-comparison/
-├── src/ # Source python code
-├── tests/ # pytest unit tests
-├── notebooks/ # Exploratory data analysis notebooks
-├── docs/html/ # Auto-generated code documentation from pdoc
-├── data/ # Dataset yaml + annotation txt labels (images are git-ignored)
-├── runs/ # Native YOLO training outputs: csv logs, training curves, confusion matrices
-├── results/ # Experiment summary CSV, selected result figures
-├── report/ # Final project report PDF
-├── venv/ # Python virtual environment (ignored by git)
+├── src/                     # Source python code
+├── tests/                   # pytest unit tests
+├── notebooks/               # Exploratory data analysis notebooks
+├── docs/html/               # Auto-generated code documentation from pdoc
+├── data/                    # Dataset yaml + annotation txt labels (images are git-ignored)
+├── runs/                    # Native YOLO training outputs: csv logs, training curves, confusion matrices
+├── results/                 # Experiment summary CSV, selected result figures
+├── report/                  # Final project report PDF
+├── venv/                    # Python virtual environment (ignored by git)
 ├── README.md
 ├── LICENSE
 ├── .gitignore
 ├── dataset.yaml
-└── yolov8s.pt # Pretrained weight for reference
+└── yolov8s.pt               # Pretrained weight for reference
 ```
 
-## Environment setup
+## Environment Setup
 ```bash
 # create virtual environment
 python -m venv venv
@@ -68,7 +68,7 @@ source venv/Scripts/activate
 # install dependencies
 pip install torch ultralytics pytest pdoc pandas matplotlib
 ```
-## Dataset instruction
+## Dataset Instruction
 Raw dataset images are not stored in this repository (too large for GitHub).
 Download MMA3001 Dataset 3 from course resources and place images and annotation files into the local `data/` folder:
 ```
@@ -87,11 +87,10 @@ Only YOLO-format `.txt` annotation labels are tracked in this repository. Images
 
 ## Experiment Status
 
-✅ Baseline finished: YOLOv5s & YOLOv8s trained for 30 epochs under identical  hyper‑parameters (input size 640).
-
-✅ Generated mAP, precision, recall metrics, training curves and confusion matrices.
-
-🔜 Next: Ablation study of input resolution; failure‑case analysis.
+✅ All 6 experiments completed (30 epochs each).
+✅ Metrics generated: mAP, precision, recall, training curves, confusion matrices.
+✅ Resolution ablation completed (640 vs 1280).
+🔜 Next: failure-case analysis on `packaging-error`.
 
 ## How to Run
 
@@ -123,23 +122,27 @@ pdoc src -o docs/html
 
 ### Completed experiments (30 epochs each)
 
-| # | Model | imgsz | batch | mAP@0.5 | mAP@0.5:0.95 | Model Size |
-|:---:|:---|:---:|:---:|:---:|:---:|:---:|
-| 1 | YOLOv5s | 640 | 16 | 0.334 | 0.195 | 18.5 MB |
-| 2 | YOLOv8s | 640 | 16 | 0.187 | 0.0924 | 22.5 MB |
-| 3 | YOLOv5s | 640 | 8 | **0.478** | **0.280** | 18.5 MB |
-| 4 | YOLOv8s | 640 | 8 | **0.587** | **0.354** | 22.5 MB |
+| # | Model | imgsz | batch | mAP@0.5 | mAP@0.5:0.95 | Inference (ms) | Model Size |
+|:---:|:---|:---:|:---:|:---:|:---:|:---:|:---:|
+| 1 | YOLOv5s | 640 | 16 | 0.334 | 0.195 | — | 18.5 MB |
+| 2 | YOLOv8s | 640 | 16 | 0.187 | 0.0924 | — | 22.5 MB |
+| 3 | YOLOv5s | 640 | 8 | 0.478 | 0.280 | 2.1 | 18.5 MB |
+| 4 | YOLOv8s | 640 | 8 | **0.587** | **0.354** | 4.1 | 22.5 MB |
+| 5 | YOLOv5s | 1280 | 8 | 0.499 | 0.295 | 9.4 | 18.5 MB |
+| 6 | YOLOv8s | 1280 | 8 | **0.502** | **0.311** | 10.3 | 22.5 MB |
 
 ### Key Findings
 
-1. **YOLOv8s outperforms YOLOv5s** at both batch settings.
-2. **batch=8 significantly outperforms batch=16** for both models (mAP@0.5: 0.587 vs 0.187 for YOLOv8s). This is attributed to the regularisation effect of larger gradient noise in small batches, which helps the model escape poor local minima.
-3. **Severe class imbalance** limits the reliability of minority-class metrics (`loose-meat`, `twisted-meat`).
+1. **batch=8 significantly outperforms batch=16** for both models. mAP@0.5 increases from 0.334 to 0.478 (YOLOv5s, +43%) and from 0.187 to 0.587 (YOLOv8s, +214%). This is attributed to the regularisation effect of larger gradient noise in small batches.
 
+2. **YOLOv8s outperforms YOLOv5s** under fair comparison (batch=8). At 640: 0.587 vs 0.478. At 1280: 0.502 vs 0.499.
+
+3. **1280 resolution gives mixed results.** It improves YOLOv5s slightly (+4.4%) but degrades YOLOv8s (−14.5%), while increasing inference time by 2.6–4.5×. For engineering deployment, 640 resolution is recommended.
+
+4. **Severe class imbalance** limits the reliability of minority-class metrics (`loose-meat`, `twisted-meat`).
 
 ### Planned / In Progress
 
-- 🔜 Resolution ablation: YOLOv8s @ 1280 (batch=8), pending due to 8 GB GPU memory limit.
 - 🔜 Failure-case analysis on `packaging-error` (most frequent but hardest class).
 
 
@@ -149,7 +152,7 @@ pdoc src -o docs/html
 3. 5‑min presentation + 3‑min Q&A in week‑14 examination period
 
 
-## AI usage note
+## AI Usage Note
 
 All AI tool usage (ChatGPT) is documented in the final project report's AI-reflection chapter, as required by the MMA3001 project brief. In summary:
 
