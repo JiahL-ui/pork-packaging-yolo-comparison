@@ -1,6 +1,6 @@
 path: ./data
-train: train/images
-val: valid/images
+train: independent_split/train.txt
+val: independent_split/valid/images
 test: test/images
 
 nc: 5

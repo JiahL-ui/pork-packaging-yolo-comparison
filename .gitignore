@@ -207,3 +207,9 @@ data/**/*.webp
 
 # yolo cache files
 *.cache
+
+# Generated disjoint train/validation split
+data/independent_split/
+
+# Full Ultralytics test outputs are archived selectively under report/figures/
+runs/detect/runs/test_eval/

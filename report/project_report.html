@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>YOLO Comparison for Pork-Rasher Packaging Inspection</title>
+<style>
+@page { size: A4; margin: 17mm 18mm 18mm; }
+body { font-family: Arial, sans-serif; color: #202a35; font-size: 9.5pt; line-height: 1.3; }
+.page { page-break-after: always; break-after: page; }
+.page:last-child { page-break-after: auto; break-after: auto; }
+h1 { color: #123b5d; font-size: 23pt; line-height: 1.15; margin: 0 0 14pt; }
+h2 { color: #145b78; font-size: 15pt; border-bottom: 1px solid #9bb6c5; padding-bottom: 4pt; margin: 0 0 10pt; }
+h3 { color: #164d6d; font-size: 11pt; margin: 10pt 0 4pt; }
+p { margin: 0 0 7pt; }
+ul, ol { margin: 3pt 0 8pt; padding-left: 19pt; }
+li { margin-bottom: 3pt; }
+table { border-collapse: collapse; width: 100%; margin: 7pt 0 9pt; font-size: 8.5pt; }
+th { background: #dceaf1; color: #173d52; text-align: left; }
+th, td { border: 1px solid #aab8c0; padding: 4pt 5pt; vertical-align: top; }
+img { max-width: 100%; max-height: 245px; object-fit: contain; display: block; margin: 5pt auto; }
+figure { margin: 6pt 0 10pt; text-align: center; }
+figcaption { font-size: 8pt; color: #4b5963; }
+.small { font-size: 8pt; color: #4b5963; }
+.callout { border-left: 3px solid #327d9e; background: #eef5f8; padding: 7pt 9pt; margin: 8pt 0; }
+.cover { padding-top: 75pt; }
+.cover .meta { font-size: 12pt; line-height: 1.7; color: #405564; }
+.cover .abstract { margin-top: 30pt; border-top: 2px solid #327d9e; padding-top: 14pt; font-size: 11pt; }
+a { color: #155d7e; }
+</style>
+</head>
+<body>
+
+<section class="page cover">
+<h1>Performance Comparison of YOLOv5s and YOLOv8s for Pork-Rasher Packaging Defect Inspection</h1>
+<p class="meta"><strong>MMA3001 — Numerical Methods and Machine Learning</strong><br>
+Individual engineering project<br>
+Evidence-based evaluation using the supplied held-out test split<br>
+23 October 2026</p>
+<div class="abstract">
+<h2>Abstract</h2>
+<p>This project evaluates two compact object-detection models, YOLOv5s and YOLOv8s, for identifying visible packaging defects in RGB images of packaged pork rashers. The engineering motivation is an automated inspection station on a food-packaging line: a vision system could flag suspect trays for rejection or human review. The project compares the models using the same 80-image test split at 640-pixel input resolution and batch size 8. YOLOv5s achieved precision 0.812, recall 0.395, mAP@0.5 0.464 and mAP@0.5:0.95 0.210. YOLOv8s achieved 0.756, 0.434, 0.502 and 0.266 respectively. Reported inference times were 3.7 and 4.1 ms/image on an NVIDIA GeForce RTX 4060 Laptop GPU.</p>
+<p>The results are descriptive rather than statistically conclusive. The test set contains 79 labelled objects, has no wrinkle examples, and only four twisted-meat examples. Earlier experiments also used a custom validation split whose images remained in the training directory; those validation results are therefore excluded from the final claims. A corrected reproducible, disjoint split is included in the repository for future retraining, but the present comparison does not require new training.</p>
+</div>
+<div class="callout"><strong>Main result.</strong> On this test set YOLOv8s has higher mAP and recall; YOLOv5s has higher precision and lower measured latency. Neither model is established as universally superior.</div>
+<p class="small">Dataset: MMA3001 Dataset 3, Roboflow Pork Rasher Error Packaging v4, CC BY 4.0. Code and experiment artifacts are maintained in the project GitHub repository.</p>
+</section>
+
+<section class="page">
+<h2>1. Engineering Problem, Inputs and Outputs</h2>
+<h3>Engineering context</h3>
+<p>Food-packaging lines rely on consistent inspection to identify defects before trays are released for distribution. Manual inspection can be repetitive, and missed packaging faults may affect product integrity, shelf life, or downstream handling. This project investigates one component of a possible mechanical/manufacturing inspection system: detecting visible defect regions on pork-rasher trays from a camera image. The intended use is a screening aid that flags images or trays for rejection or human review, not an autonomous food-safety certification system.</p>
+<p>The problem is relevant to manufacturing engineering because an inspection model would operate within a production process and must balance detection performance with throughput, repeatability, and the cost of false rejects and missed defects. This work is an offline proof of concept; no camera, conveyor, lighting rig, reject actuator, or real-time production integration was built or validated.</p>
+<h3>Input specification</h3>
+<ul>
+<li><strong>Image:</strong> three-channel RGB image, supplied in a supported image format (the repository data use JPEG images). Pixel dimensions are variable at input; the detector resizes/letterboxes images to the configured 640-pixel inference size.</li>
+<li><strong>Ground-truth annotation:</strong> one YOLO text file per image. Each non-empty row contains a zero-based class ID followed by normalized bounding-box centre x, centre y, width, and height. Coordinates are fractions of image dimensions, expected in [0, 1]. The five class IDs correspond to loose-meat, packaging-error, twisted-meat, unsealed, and wrinkle.</li>
+<li><strong>Operating settings:</strong> model checkpoint, input size, batch size, confidence/NMS behaviour, compute device, and dataset split. These affect both measured performance and timing.</li>
+</ul>
+<h3>Output specification</h3>
+<p>For each input image, the detector returns zero or more predicted defect boxes with a class label, image-coordinate box, and confidence score. Dataset-level outputs include precision, recall, mAP at IoU 0.5 and averaged over IoU 0.5–0.95, confusion matrices, precision-recall plots, and inference timing. The units for image coordinates are pixels after mapping predictions back to the source image; confidence and normalized annotation coordinates are dimensionless.</p>
+<h3>Scope and invalid inputs</h3>
+<p>The model only supports the five annotated visual categories and the image conditions represented by the dataset. It does not estimate meat freshness, microbiological safety, seal strength, or defects invisible in RGB images. The data-preprocessing utility reports missing directories and pairs images with same-stem labels; the split utility fails explicitly for missing labels and invalid split fractions. Real deployment would additionally require image-quality checks, out-of-distribution handling, measured false-negative cost, and an operator escalation path.</p>
+</section>
+
+<section class="page">
+<h2>2. Dataset and Validation Design</h2>
+<h3>Dataset and class coverage</h3>
+<p>The project uses MMA3001 Dataset 3, a Roboflow export of pork-rasher packaging images and bounding-box labels [1]. The task has five classes: loose-meat, packaging-error, twisted-meat, unsealed, and wrinkle. Dataset counts show strong imbalance. In the supplied test split, the evaluator processed 80 images and 79 labelled objects: 3 loose-meat, 23 packaging-error, 4 twisted-meat, and 49 unsealed. There were no wrinkle instances. Twelve images contained no labelled object.</p>
+<h3>Why the original custom validation results were withdrawn</h3>
+<p>An earlier script copied a random subset of training images into a custom validation folder but left the originals in the training folder. The resulting 669-image validation set therefore overlapped the training data completely. Its mAP and per-class plots are not independent evidence of generalisation and are not used as final performance claims in this report. This is a data-leakage problem, not a defect that can be corrected by adding more decimal places or changing the metric.</p>
+<h3>Evaluation used for this comparison</h3>
+<p>To meet the four-hour project constraint without repeating the training runs, the already available 640/batch-8 best checkpoints were evaluated on the supplied test split. Both checkpoints used the same test images, image size, batch size, GPU, and Ultralytics version (8.4.144). The test evaluation was conducted after the checkpoints existed; the recorded workflow does not show test metrics being used for training or parameter selection. These results provide a held-out comparison for this dataset, although the test set is small and cannot establish performance on classes absent or rare within it.</p>
+<h3>Reproducible disjoint split included for future validation</h3>
+<p>The repository now includes a fixed-seed image-level holdout utility. On the current local dataset it creates 2,679 training images in an explicit image-list file and 670 validation images in a separate folder; the two sets have no filename overlap. Class presence is balanced heuristically at the image level where possible, not by object count. The validation set has 17 images with loose-meat, 389 with packaging-error, 18 with twisted-meat, 273 with unsealed, and only 4 with wrinkle. This optional split is for future retraining and is not the test set used in the results below.</p>
+<p class="small">Reproduce: activate the project virtual environment, confirm the source train images and labels are present, then run <code>python src/split_custom_data.py</code>. The generated split is ignored by Git because it is derived from the separately downloaded dataset.</p>
+</section>
+
+<section class="page">
+<h2>3. Computational Approach and Verification</h2>
+<h3>Models and controlled comparison</h3>
+<p>YOLOv5s and YOLOv8s are single-stage convolutional object detectors, selected as compact alternative solutions for the same defect-localisation task [2, 3]. The reported pair uses pretrained small-model checkpoints, 640-pixel input, batch size 8, and the same 80-image test split. Existing project logs record 30 training epochs for these checkpoints; the test comparison itself did not involve retraining. Checkpoints are identified in the repository as <code>yolov5s_baseline_640_batch8/weights/best.pt</code> and <code>yolov8s_baseline_640_batch8/weights/best.pt</code>.</p>
+<h3>Verification and testing</h3>
+<p>Automated unit tests verify dataset path checks, image-label pairing, metric extraction and saving, and the custom integration functions. The disjoint-split tests check the expected split size on a controlled fixture, repeatability at a fixed seed, class representation, file existence, and non-overlap. All 12 repository unit tests passed in the project environment. Ultralytics also scanned the 80 test labels and produced the per-class and aggregate evaluation metrics and diagnostic plots.</p>
+<p>The test evidence validates that the evaluation pipeline can process the available labels and produces internally consistent outputs; it does not prove that the labels are complete, that the sample represents every production condition, or that real-line performance will match the test score. No independent expert relabelling or physical packaging benchmark was available.</p>
+<h3>Numerical integration component</h3>
+<p>The project implements the composite trapezoidal rule and a left-rectangle Riemann sum for sampled precision-recall data [4]. For adjacent recall samples, the trapezoidal contribution is (r<sub>i+1</sub>−r<sub>i</sub>)(p<sub>i</sub>+p<sub>i+1</sub>)/2; the left Riemann contribution uses (r<sub>i+1</sub>−r<sub>i</sub>)p<sub>i</sub>. Unit tests check a constant-precision curve (area 1), a zero curve (area 0), and a known piecewise-linear sample whose trapezoidal area is 0.65 and left-sum area is 0.90. Invalid input lengths, recall order, and range are also checked for the trapezoidal implementation.</p>
+<p><strong>Interpretation boundary:</strong> these tests verify the numerical routines on known inputs. The custom integrator was not used to produce the detector mAP values in this report; Ultralytics produced those metrics. Standard detection AP uses a ranked prediction set and an interpolated precision-recall envelope, so a raw trapezoidal integral is not interchangeable with Ultralytics mAP.</p>
+<figure><img src="figures/test_eval/yolov8s_test_predictions.jpg" alt="YOLOv8s predictions on test images"><figcaption>Example YOLOv8s predictions on the held-out test split. Visual examples illustrate outputs; aggregate metrics below remain the quantitative comparison.</figcaption></figure>
+</section>
+
+<section class="page">
+<h2>4. Results and Engineering Interpretation</h2>
+<table>
+<thead><tr><th>Model</th><th>Images / objects</th><th>Precision</th><th>Recall</th><th>mAP@0.5</th><th>mAP@0.5:0.95</th><th>Inference ms/image</th></tr></thead>
+<tbody>
+<tr><td>YOLOv5s, 640/batch 8</td><td>80 / 79</td><td>0.812</td><td>0.395</td><td>0.464</td><td>0.210</td><td>3.7</td></tr>
+<tr><td>YOLOv8s, 640/batch 8</td><td>80 / 79</td><td>0.756</td><td>0.434</td><td>0.502</td><td>0.266</td><td>4.1</td></tr>
+</tbody>
+</table>
+<p>YOLOv8s exceeds YOLOv5s by 0.038 mAP@0.5 and 0.056 mAP@0.5:0.95, while recall is 0.039 higher. YOLOv5s has precision 0.056 higher and reported inference latency 0.4 ms/image lower. The measured latency difference is a single-run framework timing and is too small to establish a robust speed advantage without repeated, controlled benchmarking. The mAP difference is a useful observation for this sample, not a statistical-significance claim.</p>
+<h3>Per-class results</h3>
+<table>
+<thead><tr><th>Class</th><th>Test images</th><th>Objects</th><th>YOLOv5s mAP@0.5</th><th>YOLOv8s mAP@0.5</th></tr></thead>
+<tbody>
+<tr><td>loose-meat</td><td>2</td><td>3</td><td>0.517</td><td>0.500</td></tr>
+<tr><td>packaging-error</td><td>16</td><td>23</td><td>0.484</td><td>0.568</td></tr>
+<tr><td>twisted-meat</td><td>4</td><td>4</td><td>0.0088</td><td>0.0928</td></tr>
+<tr><td>unsealed</td><td>49</td><td>49</td><td>0.847</td><td>0.849</td></tr>
+<tr><td>wrinkle</td><td>0</td><td>0</td><td>Not evaluated</td><td>Not evaluated</td></tr>
+</tbody>
+</table>
+<p>The models show similar mAP on unsealed, and YOLOv8s has a higher observed score for packaging-error. Metrics for loose-meat and twisted-meat are based on very few labelled objects and are highly uncertain. There is no test evidence for wrinkle. This coverage pattern makes a single overall mAP insufficient as a deployment acceptance criterion.</p>
+<p>For a production screening station, missed defects may be more costly than additional human reviews. Recall and class-specific false negatives therefore matter alongside precision and throughput. Neither model is ready for unattended rejection decisions: confidence thresholds, operating speed, lighting variation, and the cost of false accepts have not been validated on a production line.</p>
+</section>
+
+<section class="page">
+<h2>5. Alternative Solutions, Performance and Sensitivity</h2>
+<h3>Alternative comparison</h3>
+<p>YOLOv5s is the baseline and YOLOv8s is the alternative. On the same test subset and inference settings, YOLOv8s provides the higher observed mAP and recall; YOLOv5s provides higher precision and marginally lower measured latency. The model summaries report about 9.11 million parameters and 23.8 GFLOPs for YOLOv5s, versus 11.13 million parameters and 28.4 GFLOPs for YOLOv8s at the evaluation configuration. This suggests YOLOv8s is the larger computational model, while both are compact compared with larger detector variants. These operation counts are framework summaries, not measured energy or memory use.</p>
+<h3>Performance measurement</h3>
+<p>Evaluation ran on an NVIDIA GeForce RTX 4060 Laptop GPU with 8 GB reported memory, Ultralytics 8.4.144, PyTorch 2.14.0+cu126, and Python 3.12.3. Ultralytics reported 3.7 ms/image for YOLOv5s and 4.1 ms/image for YOLOv8s. Timing includes framework evaluation conditions and is not a complete camera-to-actuator latency measurement. It excludes real conveyor triggering, image acquisition, network communication, and reject mechanism response.</p>
+<h3>Parameter sensitivity and optimisation</h3>
+<p>The repository contains earlier batch-size (8 vs 16) and image-resolution (640 vs 1280) training experiments. They demonstrate that parameter sensitivity was investigated. However, they were run before the train/validation overlap was identified and their validation protocol is not sufficiently preserved for a reliable final ablation. Their reported differences are therefore preliminary and are not used to assert that a particular batch size or resolution is optimal.</p>
+<p>Within the available four-hour window, the practical improvement was to evaluate the existing matched 640 checkpoints on the withheld test data rather than claim new, unverified training results. The selected 640 input is a reasonable baseline for a future controlled deployment study because the existing 1280 runs were substantially slower in historical logs; the present test comparison does not establish the accuracy/runtime trade-off at 1280. A proper optimisation study would repeat both models with the corrected disjoint split, hold all other settings constant, repeat timing runs after warm-up, and report memory and throughput.</p>
+<div class="callout"><strong>Decision supported by current evidence:</strong> retain both models as candidate screening models; prefer neither universally. If a prototype prioritises recall, YOLOv8s is the candidate to investigate next, but first test class-specific false negatives with a larger, representative set. Do not deploy either model without operational thresholds and human oversight.</div>
+</section>
+
+<section class="page">
+<h2>6. Limitations, Lessons and Next Steps</h2>
+<h3>Limitations</h3>
+<ol>
+<li><strong>Small, incomplete test set.</strong> Eighty images and 79 objects provide weak evidence for rare categories. Wrinkle is absent and twisted-meat has four objects; claims are limited to observed classes and sample conditions.</li>
+<li><strong>Historical validation leakage.</strong> The old custom validation images remained in the training directory. Historical validation metrics and plots are not independent and have been explicitly separated from this test comparison.</li>
+<li><strong>Checkpoint selection history.</strong> The project logs preserve run arguments and training curves but not a frozen copy of every dataset manifest used during each historical run. The report therefore identifies the final test checkpoint by path and does not claim that the older validation figures represent an independent selection protocol.</li>
+<li><strong>Single evaluation and timing.</strong> No repeated-seed confidence intervals, bootstrapping, or controlled latency trials were conducted. A 0.4 ms/image difference is not a robust throughput conclusion.</li>
+<li><strong>Domain and system gap.</strong> The image dataset does not represent all possible cameras, packaging materials, lighting, production speeds, or defect severities. The model was not integrated with or tested on a physical packaging line.</li>
+<li><strong>Class imbalance.</strong> Aggregate scores are dominated by common classes. More representative labelled examples are needed before interpreting rare-class performance or choosing an acceptance threshold.</li>
+</ol>
+<h3>Lessons learned</h3>
+<p>The most important engineering lesson is that a validation score is only meaningful when the evaluation images are independent of model training and the data split is documented. A reproducible script, unit tests, and a plausible-looking confusion matrix do not by themselves prove generalisation. The held-out test provides a more defensible comparison for this project, but its class coverage places strict limits on what can be concluded. The second lesson is to report metric names and units precisely: inference milliseconds per image are not FPS, and custom integration test values are not the detector's mAP.</p>
+<h3>Practical next steps</h3>
+<ul>
+<li>Collect and label more examples, especially wrinkle and twisted-meat, then verify label quality.</li>
+<li>Retrain both candidates using the repository's non-overlapping fixed-seed split; keep the test set untouched until final evaluation.</li>
+<li>Run repeated timing trials after warm-up, state the hardware and batch size, and report median/variation as well as per-image latency.</li>
+<li>Define an engineering acceptance criterion from missed-defect and false-reject costs; inspect failure cases with a domain expert.</li>
+</ul>
+</section>
+
+<section class="page">
+<h2>7. Reproducibility, AI Reflection and References</h2>
+<h3>Reproducible workflow</h3>
+<p>The project working tree contains the README, MIT-licensed source code, dataset configuration and YOLO label files, experiment logs, unit tests, and generated pdoc HTML documentation. Dataset images and model weight files are excluded from version control because of size; the dataset must be downloaded from the course/Roboflow source before running the workflow. Test metrics are also tabulated in <code>results/test_evaluation_640.csv</code>, and the saved test plots are in <code>report/figures/test_eval/</code>. Commit and push the final reviewed changes before sharing the GitHub repository link.</p>
+<p>To reproduce: create and activate a Python 3.12 environment, install PyTorch and Ultralytics plus pytest, pandas and pdoc as described in the README; obtain the licensed dataset and place it under <code>data/</code>; run <code>python src/split_custom_data.py</code> for the optional disjoint training/validation split; evaluate the saved model weights using <code>yolo detect val data=data/dataset.yaml split=test model=&lt;checkpoint&gt; imgsz=640 batch=8 device=0</code>; and run <code>pytest tests/ -v</code>. Exact historical training reproduction requires the original pretrained checkpoint files and matching dataset configuration.</p>
+<h3>AI use and critical reflection</h3>
+<p>DeepSeek V4 made a low, advisory contribution by helping explain YOLO training parameters and plan experiments. Copilot made a moderate contribution to the final review by comparing the work with the brief, identifying the earlier train/validation overlap, and assisting with the corrected split workflow, tests, metric labels, and documentation. The student's contribution remains primary for selecting the engineering problem and models, running experiments and test evaluation, monitoring the GPU, and deciding which conclusions are supported.</p>
+<p>One consequential error in the earlier workflow was treating a copied subset of training images as an independent validation set. The audit showed that the images were still present in training, so those validation metrics could not support claims about unseen data. The response was to withdraw those claims and evaluate the existing checkpoints on the supplied test split. AI assistance therefore helped identify and address a methodological weakness, but the correction was checked against filenames, dataset paths, saved training/evaluation records, and the observed test output. Suggestions were not accepted automatically: for example, a high-resolution batch-size proposal was rejected after GPU memory monitoring showed it was unsuitable. This is why AI-generated technical advice must be tested against actual project constraints.</p>
+<p>The student's personal reflection is: “This project taught me that model evaluation cannot rely only on metrics or passing tests; I must confirm validation data were not used in training and check which dataset and measurement method each metric represents. AI can help identify problems, but suggestions still need to be verified against code, experiments, and hardware.” The revised workflow reflects this learning: the earlier validation leakage was checked against filenames and dataset paths, the old metrics were withdrawn as independent evidence, and the existing checkpoints were evaluated on the supplied test split. The student selected the dataset and model comparison, ran training and test commands, monitored GPU behaviour, and remains responsible for the final interpretation and engineering decisions.</p>
+<h3>References</h3>
+<ol class="small">
+<li>Monash University, <em>MMA3001 Numerical Methods and Machine Learning — Project Brief</em>, 2026, especially project requirements, validation, deliverables and assessment criteria, pp. 4–15.</li>
+<li>Jocher, G. et al., <em>ultralytics/yolov5</em>, GitHub repository. <a href="https://github.com/ultralytics/yolov5">https://github.com/ultralytics/yolov5</a>.</li>
+<li>Ultralytics, <em>YOLO documentation: Detection and validation</em>. <a href="https://docs.ultralytics.com/">https://docs.ultralytics.com/</a>.</li>
+<li>Roboflow Universe, <em>Pork Rasher Error Packaging, version 4</em>, CC BY 4.0. <a href="https://universe.roboflow.com/hello-2aqe0/pork-rasher-error-packaging/dataset/4">Dataset source and license</a>.</li>
+<li>Chapra, S. C. and Canale, R. P., <em>Numerical Methods for Engineers</em>, Cengage Learning. Composite Newton–Cotes integration methods used as the numerical-method reference.</li>
+</ol>
+</section>
+
+</body>
+</html>
