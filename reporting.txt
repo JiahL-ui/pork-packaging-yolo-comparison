@@ -1,0 +1,16 @@
+Held-out test evaluation:
+Without retraining, the existing YOLOv5s and YOLOv8s 640/batch-8 best checkpoints were evaluated on the supplied test split using Ultralytics 8.4.144 on an RTX 4060 Laptop GPU. Both runs evaluated the same 80 images and 79 labelled objects:
+
+* YOLOv5s: precision 0.812, recall 0.395, mAP50 0.464, mAP50-95 0.210, inference 3.7 ms/image.
+* YOLOv8s: precision 0.756, recall 0.434, mAP50 0.502, mAP50-95 0.266, inference 4.1 ms/image.
+
+On this one test evaluation, YOLOv8s had higher mAP and recall; YOLOv5s had higher precision and lower reported inference latency. Treat this as descriptive evidence only: the test set is small, has no wrinkle instances and only four twisted-meat instances, and the single-run timing is not a controlled benchmark. Do not claim statistical significance or performance for classes absent from the test set. Preserve this test split for reporting rather than using it for further model selection.
+
+Preliminary results warning:
+The previously reported 669-image custom validation set was copied from the training set, and those images remained in the training data. Its mAP50, per-class metrics, confusion matrix, and PR curves are therefore not independent validation evidence. Do not use those values to claim performance on unseen data or to conclude that the model overfits minority classes.
+
+Optional corrected validation split:
+The project also creates a disjoint split with 2,679 training images and 670 validation images. The original training files are left untouched, and the training image list excludes every validation image. Retraining on this split would provide an additional validation comparison, but it is not required to report the already completed held-out test evaluation. The class counts in the new validation set are image-presence counts and must not be confused with object-instance counts.
+
+Report follow-up:
+For any optional retraining, regenerate the validation metrics, confusion matrix, PR curves, and failure-case examples from the disjoint split. State the dataset split, checkpoint, and evaluation settings alongside each result. The supplied test labels do not include every class, so clearly identify that limitation and do not imply the test set validates all five classes. Interpret minority-class errors as observations to investigate, not proof of a particular cause.
